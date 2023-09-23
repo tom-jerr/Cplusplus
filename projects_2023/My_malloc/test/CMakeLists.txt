@@ -1,4 +1,4 @@
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin/test)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/build/bin/test)
 # add_executable(THREAD ThreadCacheTest.cpp ${CMAKE_SOURCE_DIR}/src/ThreadCache.cpp)
 # target_include_directories(THREAD PRIVATE ${CMAKE_SOURCE_DIR}/include)
 

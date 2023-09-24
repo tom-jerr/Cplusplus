@@ -89,11 +89,11 @@ auto BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) -> Page * {
     if (!free_list_.empty()) {
       frame_id = free_list_.front();
       free_list_.pop_front();
-    }
-    // found in replacer_
-    else if (!replacer_->Evict(&frame_id)) {
-      latch_.unlock();
-      return nullptr;
+    } else {
+      if (!replacer_->Evict(&frame_id)) {
+        latch_.unlock();
+        return nullptr;
+      }
     }
   } else {
     // 直接找到了Page

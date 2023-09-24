@@ -191,6 +191,7 @@ auto ExtendibleHashTable<K, V>::Bucket::Insert(const K &key, const V &value) -> 
 - 记得在驱逐和Remove entry时，记得将access_count和is_evictable进行初始化设置
 - 否则可能在线上出现一些未知错误
 - SetEvictable中，如果access_count为0时，不进行标记的设置
+  - 如果不处理这种特殊情况，可能出现该元素已经Unpin，但是仍能设置evictable，导致curr_size_多删除或者多增加
   
 ~~~c++
 LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k) : curr_size_(0), replacer_size_(num_frames), k_(k) {}

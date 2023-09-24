@@ -19,6 +19,7 @@ namespace bustub {
 LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k) : curr_size_(0), replacer_size_(num_frames), k_(k) {}
 
 auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
+  std::scoped_lock<std::mutex> lock(latch_);
   // 先加入的timestamp在后面
   // 先删除历史队列中的
   for (auto it = --history_list_.end(); it != --history_list_.begin(); --it) {
@@ -47,6 +48,7 @@ auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
 
 void LRUKReplacer::RecordAccess(frame_id_t frame_id) {
   BUSTUB_ASSERT(frame_id <= static_cast<int>(replacer_size_), "frame_id larger than replacer size\n");
+  std::scoped_lock<std::mutex> lock(latch_);
   // 已经在cache列表中
   auto it = cache_list_.begin();
   for (; it != cache_list_.end(); ++it) {
@@ -92,6 +94,7 @@ void LRUKReplacer::RecordAccess(frame_id_t frame_id) {
 
 void LRUKReplacer::SetEvictable(frame_id_t frame_id, bool set_evictable) {
   BUSTUB_ASSERT(frame_id <= static_cast<int>(replacer_size_), "frame_id larger than replacer size\n");
+  std::scoped_lock<std::mutex> lock(latch_);
   if (is_evictable_.find(frame_id) != is_evictable_.end()) {
     if (is_evictable_[frame_id] && !set_evictable) {
       curr_size_--;

@@ -16,9 +16,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ------ Build type ------
 set(CMAKE_BUILD_TYPE "Debug")
-set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb -DDEBUG -pthread")
-set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall -pthread")
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb -DDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
-# add_subdirectory(src)
+# ------ include directory ------
+include_directories(include)
+add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(third_party/googletest)

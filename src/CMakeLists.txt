@@ -1,0 +1,1 @@
+add_library(neofileop STATIC CLFileOP.cpp CLFileOPUtils.cpp)

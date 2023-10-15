@@ -1,8 +1,6 @@
 #include <fcntl.h>
 #include <gtest/gtest.h>
 
-#include <string>
-
 #include "../include/CLFileOP.h"
 
 #define FILENAME "test.txt"

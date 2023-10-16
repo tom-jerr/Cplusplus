@@ -63,7 +63,7 @@ void coutInfo(struct stat statbuf, struct dirent* entry) {
          statbuf.st_mode & S_IWOTH ? 'w' : '-',
          statbuf.st_mode & S_IXOTH ? 'x' : '-');
   /* 打印文件硬链接数 */
-  printf("%d ", statbuf.st_nlink);
+  printf("%d ", (int)statbuf.st_nlink);
   /* 打印文件所有者 */
   printf("%d ", statbuf.st_uid);
   /* 打印文件所属组 */

@@ -5,6 +5,7 @@
 #include "common/logger.h"
 #include "common/rid.h"
 #include "storage/index/b_plus_tree.h"
+#include "storage/page/b_plus_tree_page.h"
 #include "storage/page/header_page.h"
 
 namespace bustub {
@@ -23,6 +24,33 @@ BPLUSTREE_TYPE::BPlusTree(std::string name, BufferPoolManager *buffer_pool_manag
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::IsEmpty() const -> bool { return root_page_id_ == INVALID_PAGE_ID; }
+
+INDEX_TEMPLATE_ARGUMENTS
+auto BPLUSTREE_TYPE::FindLeaf(const KeyType &key) -> BPlusTreePage * {
+  page_id_t page_id = root_page_id_;
+  page_id_t pre_page_id;
+  // root page fetched and transfer BPlustree page
+  auto *page = buffer_pool_manager_->FetchPage(page_id);
+  auto *node = reinterpret_cast<BPlusTreePage *>(page->GetData());
+  if (!node->IsLeafPage()) {
+    // root-to-leaf
+    auto *internal = reinterpret_cast<InternalPage *>(node);
+    while (!internal->IsLeafPage()) {
+      int index = internal->KeyIndex(key, comparator_);
+      pre_page_id = page_id;
+      page_id = internal->ValueAt(index);
+      internal = reinterpret_cast<InternalPage *>(buffer_pool_manager_->FetchPage(page_id)->GetData());
+      // 注意释放buffer中的page
+      buffer_pool_manager_->UnpinPage(pre_page_id, false);
+    }
+    // 保留leaf page在buffer pool中
+    // buffer_pool_manager_->UnpinPage(page_id, false);
+    return static_cast<BPlusTreePage *>(internal);
+  }
+  // 保留leaf page在buffer pool中
+  // buffer_pool_manager_->UnpinPage(page_id, false);
+  return node;
+}
 /*****************************************************************************
  * SEARCH
  *****************************************************************************/
@@ -33,6 +61,16 @@ auto BPLUSTREE_TYPE::IsEmpty() const -> bool { return root_page_id_ == INVALID_P
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *transaction) -> bool {
+  auto *leaf = FindLeaf(key);
+  auto *leaf_page = reinterpret_cast<LeafPage *>(leaf);
+  ValueType value;
+  if (leaf_page->Lookup(key, &value, comparator_)) {
+    // now leaf page is in buffer pool, and we don't need it anymore
+    buffer_pool_manager_->UnpinPage(leaf_page->GetPageId(), false);
+    result->push_back(value);
+    return true;
+  }
+
   return false;
 }
 

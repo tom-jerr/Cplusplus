@@ -74,6 +74,9 @@ class BPlusTree {
   // read data from file and remove one by one
   void RemoveFromFile(const std::string &file_name, Transaction *transaction = nullptr);
 
+  // 寻找叶子结点
+  auto FindLeaf(const KeyType &key) -> BPlusTreePage *;
+
  private:
   void UpdateRootPageId(int insert_record = 0);
 

@@ -9,11 +9,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <algorithm>
+#include <iterator>
 #include <sstream>
 
 #include "common/exception.h"
 #include "common/rid.h"
 #include "storage/page/b_plus_tree_leaf_page.h"
+#include "storage/page/b_plus_tree_page.h"
 
 namespace bustub {
 
@@ -53,6 +56,37 @@ INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_LEAF_PAGE_TYPE::KeyAt(int index) const -> KeyType {
   // replace with your own code
   return array_[index].first;
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_LEAF_PAGE_TYPE::ValueAt(int index) const -> ValueType {
+  // replace with your own code
+  return array_[index].second;
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_LEAF_PAGE_TYPE::KeyIndex(const KeyType &key, const KeyComparator &comparator) const -> int {
+  auto index = std::lower_bound(array_, array_ + GetSize(), key, [&comparator](const auto &pair, const auto &key) {
+    return comparator(pair.first, key) < 0;
+  });
+  return std::distance(array_, index);
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_LEAF_PAGE_TYPE::Lookup(const KeyType &key, ValueType *value, const KeyComparator &comparator) const
+    -> bool {
+  auto index = std::lower_bound(array_, array_ + GetSize(), key, [&comparator](const auto &pair, const auto &key) {
+    return comparator(pair.first, key) < 0;
+  });
+  if (index == array_ + GetSize()) {
+    *value = ValueAt(GetSize() - 1);
+    return true;
+  }
+  if (comparator(key, index->first) == 0) {
+    *value = index->second;
+    return true;
+  }
+  return false;
 }
 
 template class BPlusTreeLeafPage<GenericKey<4>, RID, GenericComparator<4>>;

@@ -1,18 +1,27 @@
 #include <fcntl.h>
 #include <gtest/gtest.h>
 
+#include <cstdio>
+
 #include "../include/CLFileOP.h"
 
 #define FILENAME "test.txt"
 class FileOPTest : public ::testing::Test {
  protected:
   virtual void SetUp() { file_.openFile(FILENAME); }
-  virtual void TearDown() { file_.closeFile(); }
+  virtual void TearDown() {}
   neo::file::FileOP file_;
 };
 
-TEST_F(FileOPTest, open_close_file) { EXPECT_EQ(file_.getFileFd(), 3); }
-TEST_F(FileOPTest, lseek_file) { EXPECT_EQ(file_.lseekFile(), 1); }
+TEST_F(FileOPTest, open_close_file) {
+  int fd = file_.getFileFd();
+  EXPECT_EQ(fd, 3);
+}
+
+TEST_F(FileOPTest, lseek_file) {
+  int offset = file_.lseekFile();
+  EXPECT_EQ(offset, 1);
+}
 
 TEST_F(FileOPTest, write_file) {
   file_.writeFile("test");
@@ -28,4 +37,11 @@ TEST_F(FileOPTest, read_file) {
   char dst[5] = "\0";
   file_.readFile(dst, 4);
   EXPECT_EQ(strcmp(dst, "test"), 0);
+}
+
+TEST_F(FileOPTest, write_read_file) {
+  file_.writeFile("BEGIN");
+  char dst[6] = "\0";
+  file_.readFile(dst, 5, SEEK_END, -5);
+  EXPECT_EQ(strcmp(dst, "BEGIN"), 0);
 }

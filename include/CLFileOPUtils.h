@@ -42,7 +42,7 @@ struct Header {
 class HBuffer {
  public:
   HBuffer();
-  ~HBuffer() = default;
+  ~HBuffer();
   /* append header into HBuffer */
   int append(const Header* header);
   void reset();

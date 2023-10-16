@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 # --- Project settings ---
 
 # ------ Project name ------
-project(neolog)
+project(neofileops)
 
 # ------ Standard ------
 set(CMAKE_CXX_STANDARD 17)

@@ -16,7 +16,7 @@ class FileOP {
   /* write File */
   int writeFile(const char* filestr);
   /* read File */
-  int readFile(char* dst, int len, int offset = 0);
+  int readFile(char* dst, int len, int mode = SEEK_SET, int offset = 0);
   /* flush buffer to file */
   /* buffer is read buffer or write buffer */
   int flushBuffer(Buffer* buffer);

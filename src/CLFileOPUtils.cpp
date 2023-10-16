@@ -46,6 +46,11 @@ void Buffer::reset() {
 HBuffer::HBuffer()
     : header_(new Header[BUFFER_SIZE]), avail_(BUFFER_SIZE), count_(0) {}
 
+HBuffer::~HBuffer() {
+  reset();
+  delete[] header_;
+}
+
 /* store header to HBuffer */
 int HBuffer::append(const Header* header) {
   if (avail_ > 0) {
@@ -57,6 +62,7 @@ int HBuffer::append(const Header* header) {
   return 0;
 }
 
+/* reset HBuffer, just overlap this buffer again */
 void HBuffer::reset() {
   avail_ = BUFFER_SIZE;
   count_ = 0;

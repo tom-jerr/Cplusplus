@@ -7,43 +7,18 @@
 #include <string>
 #include <vector>
 
-class OuterSort {
- private:
-  ThreadPool m_pool_;
-  std::vector<std::string> m_files_;
-  std::string m_respath_;
-  std::vector<std::vector<int>> m_tmpsort_;
-
- private:
-  void write_data(FILE *f, int a[], int n);
-  void read_data(FILE *f, int a[], int n);
-  void sort(const std::string &path, const std::string &tmpfile);
-  void merge(const std::string &path1, const std::string &path2,
-             const std::string &path3);
-
- public:
-  OuterSort(const std::vector<std::string> &files, const std::string &respath,
-            int threadnum);
-  ~OuterSort() = default;
-  void run();
-};
-
+namespace neo {
 // 向文本文件中写入数据
-inline void OuterSort::write_data(FILE *f, int a[], int n) {
+inline void write_data(FILE *f, int a[], int n) {
   for (int i = 0; i < n; ++i) fprintf(f, "%d ", a[i]);
 }
 // 从文本文件中读取数据
-inline void OuterSort::read_data(FILE *f, int a[], int n) {
+inline void read_data(FILE *f, int a[], int n) {
   for (int i = 0; i < n; ++i) fscanf(f, "%d", &a[i]);
 }
 
-inline OuterSort::OuterSort(const std::vector<std::string> &files,
-                            const std::string &respath, int threadnum)
-    : m_pool_(ThreadPool(threadnum)), m_files_(files), m_respath_(respath) {}
-
 // 单个文件排序
-inline void OuterSort::sort(const std::string &path,
-                            const std::string &tmpfile) {
+inline void sort(const std::string &path, const std::string &tmpfile) {
   FILE *fp = fopen(path.c_str(), "r+");
   FILE *tmp = fopen(tmpfile.c_str(), "wb+");
   fseek(fp, 0, SEEK_END);
@@ -59,8 +34,8 @@ inline void OuterSort::sort(const std::string &path,
 }
 
 // 归并操作
-inline void OuterSort::merge(const std::string &path1, const std::string &path2,
-                             const std::string &path3) {
+inline void merge(const std::string &path1, const std::string &path2,
+                  const std::string &path3) {
   FILE *fp1 = fopen(path1.c_str(), "r");
   FILE *fp2 = fopen(path2.c_str(), "r");
   FILE *fp3 = fopen(path3.c_str(), "wb+");
@@ -93,34 +68,5 @@ inline void OuterSort::merge(const std::string &path1, const std::string &path2,
   free(buf3);
 }
 
-inline void OuterSort::run() {
-  int filecnt = m_files_.size();
-  int cnt = 0;
-  // while (filecnt > 1) {
-  //   std::vector<std::string> tmpfiles;
-  //   for (int i = 0; i < filecnt; i++) {
-  //     if (i + 1 < filecnt) {
-  //       std::string tmpfile = "../data/tmp" + std::to_string(cnt++);
-  //       tmpfiles.push_back(tmpfile);
-  //       m_pool_.enqueue([this, i, tmpfile]() { sort(m_files_[i]); });
-  //     } else {
-  //       tmpfiles.push_back(m_files_[i]);
-  //     }
-  //   }
-  //   // m_pool_.wait();
-  //   m_files_ = tmpfiles;
-  //   filecnt = m_files_.size();
-  // }
-  for (int i = 0; i < filecnt; i++) {
-    std::string tmpfile = "../data/tmp" + std::to_string(cnt++);
-    m_pool_.enqueue([this, i, tmpfile]() { this->sort(m_files_[i], tmpfile); });
-  }
-  sleep(1);  // wait for sort() done
-  std::cout << "sort done\n";
-  // std::string resfile = m_respath_;
-  // m_pool_.enqueue(
-  //     [this, resfile]() { merge(m_files_[0], m_files_[1], resfile); });
-  // // m_pool_.wait();
-  // std::cout << "done\n";
-}
+}  // namespace neo
 #endif /* CLOUTERSORT_H_ */

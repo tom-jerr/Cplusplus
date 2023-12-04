@@ -11,5 +11,5 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(include)
 add_subdirectory(test)
-# add_subdirectory(src)
+add_subdirectory(src)
 

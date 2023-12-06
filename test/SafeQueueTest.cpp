@@ -38,7 +38,7 @@ TEST(SafeQueueTest, MultiInsertRemoveTest) {
     }));
   }
   for (int i = 0; i < 10; ++i) {
-    threads.push_back(std::thread([&queue, i]() {
+    threads.push_back(std::thread([&queue]() {
       for (int j = 0; j < 100; ++j) {
         int val;
         queue.dequeue(val);

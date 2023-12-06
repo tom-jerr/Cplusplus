@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
-#include <iostream>
 
 #include "../include/CLUtils.h"
 
@@ -12,10 +11,6 @@ void write_file(const std::string &path, int n) {
   fwrite(a, sizeof(uint64_t), n, fp);
   free(a);
   FILE *fp1 = fopen(path.c_str(), "rb");
-  fseek(fp1, 0, SEEK_END);
-  int len = ftell(fp1);
-  // std::cout << len << std::endl;
-  // std::cout << sizeof(uint64_t) << std::endl;
   fclose(fp);
   fclose(fp1);
 }

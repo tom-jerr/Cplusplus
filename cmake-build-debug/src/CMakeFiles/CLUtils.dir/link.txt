@@ -1,0 +1,2 @@
+/usr/bin/ar qc libCLUtils.a  CMakeFiles/CLUtils.dir/CLUtils.cpp.o
+/usr/bin/ranlib libCLUtils.a

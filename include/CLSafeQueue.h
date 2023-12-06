@@ -21,20 +21,30 @@ class SafeQueue {
   void dequeue(T& t);  // dequeue an object
   bool empty();        // check if queue is empty
   int size();          // return the size of queue
+  T front();
 
   void wakeup();
 };
 
 template <typename T>
+T SafeQueue<T>::front() {
+  std::lock_guard<std::mutex> lock(m_mutex_);
+  T t = m_queue_.front();
+  return t;
+}
+
+template <typename T>
 bool SafeQueue<T>::empty() {
   std::lock_guard<std::mutex> lock(m_mutex_);
-  return m_queue_.empty();
+  bool is_empty = m_queue_.empty();
+  return is_empty;
 }
 
 template <typename T>
 int SafeQueue<T>::size() {
   std::lock_guard<std::mutex> lock(m_mutex_);
-  return m_queue_.size();
+  int size = m_queue_.size();
+  return size;
 }
 
 template <typename T>

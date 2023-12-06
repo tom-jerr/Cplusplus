@@ -1,72 +1,61 @@
 #ifndef CLOUTERSORT_H_
 #define CLOUTERSORT_H_
-#include <CLThreadPool.h>
 #include <unistd.h>
 
-#include <cstdio>
-#include <string>
+#include <atomic>
+#include <cassert>
+#include <condition_variable>
+#include <functional>
+#include <future>
+#include <mutex>
+#include <thread>
 #include <vector>
 
+#include "CLSafeQueue.h"
+
 namespace neo {
-// 向文本文件中写入数据
-inline void write_data(FILE *f, int a[], int n) {
-  for (int i = 0; i < n; ++i) fprintf(f, "%d ", a[i]);
-}
-// 从文本文件中读取数据
-inline void read_data(FILE *f, int a[], int n) {
-  for (int i = 0; i < n; ++i) fscanf(f, "%d", &a[i]);
-}
+class OuterSort {
+  using Task = std::function<void()>;
 
-// 单个文件排序
-inline void sort(const std::string &path, const std::string &tmpfile) {
-  FILE *fp = fopen(path.c_str(), "r+");
-  FILE *tmp = fopen(tmpfile.c_str(), "wb+");
-  fseek(fp, 0, SEEK_END);
-  int len = ftell(fp) / sizeof(int);
-  fseek(fp, 0, SEEK_SET);
-  int *buf = (int *)malloc(len * sizeof(int));
-  read_data(fp, buf, len);
-  std::sort(buf, buf + len - 1);
-  write_data(tmp, buf, len);
-  fclose(fp);
-  fclose(tmp);
-  free(buf);
-}
+ private:
+  /*
+   线程池中结构
+ */
+  std::vector<std::thread> m_workers_;  // 线程池
+  std::thread m_merge_worker_;          // 加入merge任务的线程
+  SafeQueue<Task> m_tasks_;             // 任务队列
+  SafeQueue<std::string> m_files_;      // 文件队列
+  /*
+    互斥锁，条件变量
+  */
+  std::mutex m_mutex_;                       // 线程池互斥锁
+  std::mutex m_file_mutex_;                  // 文件队列互斥锁
+  std::condition_variable m_cond_;           // 线程池条件变量
+  std::condition_variable m_file_cond_;      // 文件队列条件变量
+  std::condition_variable m_one_file_cond_;  // 最终文件条件变量
+  /*
+    原子变量
+  */
+  std::atomic<bool> m_stop_;               // 是否结束线程池中线程
+  std::atomic<int> m_threadnum_;           // 线程池中线程数量
+  std::vector<std::string> m_need_files_;  // 需要排序的总文件
+ private:
+  // 线程池每次执行的函数
+  void process_task();
+  // merge线程每次执行的函数
+  void merge_task();
+  template <typename F, typename... Args>
+  auto enqueue_task(F &&f, Args &&...args)
+      -> std::future<typename std::result_of<F(Args...)>::type>;
+  void enqueue_file(std::string file);
+  void sort(const std::string &path);
+  void merge(const std::string &path1, const std::string &path2);
 
-// 归并操作
-inline void merge(const std::string &path1, const std::string &path2,
-                  const std::string &path3) {
-  FILE *fp1 = fopen(path1.c_str(), "r");
-  FILE *fp2 = fopen(path2.c_str(), "r");
-  FILE *fp3 = fopen(path3.c_str(), "wb+");
-  fseek(fp1, 0, SEEK_END);
-  int len1 = ftell(fp1);
-  fseek(fp1, 0, SEEK_SET);
-  fseek(fp2, 0, SEEK_END);
-  int len2 = ftell(fp2);
-  fseek(fp2, 0, SEEK_SET);
-  int *buf1 = (int *)malloc(len1);
-  int *buf2 = (int *)malloc(len2);
-  int *buf3 = (int *)malloc(len1 + len2);
-  read_data(fp1, buf1, len1);
-  read_data(fp2, buf2, len2);
-  int i = 0, j = 0, k = 0;
-  while (i < len1 && j < len2) {
-    if (buf1[i] < buf2[j])
-      buf3[k++] = buf1[i++];
-    else
-      buf3[k++] = buf2[j++];
-  }
-  while (i < len1) buf3[k++] = buf1[i++];
-  while (j < len2) buf3[k++] = buf2[j++];
-  write_data(fp3, buf3, len1 + len2);
-  fclose(fp1);
-  fclose(fp2);
-  fclose(fp3);
-  free(buf1);
-  free(buf2);
-  free(buf3);
-}
-
+ public:
+  OuterSort(size_t thread_num, std::vector<std::string> need_files);
+  ~OuterSort();
+  std::string run();
+};
 }  // namespace neo
+
 #endif /* CLOUTERSORT_H_ */

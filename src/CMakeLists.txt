@@ -1,1 +1,7 @@
+set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -DNODEBUG -O3 -Wall")
 add_library(CLUtils STATIC CLUtils.cpp)
+# add_library(OuterSort STATIC CLOuterSort.cpp)
+add_executable(OuterSortTest CLOuterSort.cpp)
+target_link_libraries(OuterSortTest pthread)

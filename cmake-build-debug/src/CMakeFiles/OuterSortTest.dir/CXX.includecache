@@ -1,0 +1,44 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/lzy/Workspace/ThreadPool/include/CLOuterSort.h
+unistd.h
+-
+atomic
+-
+cassert
+-
+condition_variable
+-
+functional
+-
+future
+-
+mutex
+-
+thread
+-
+vector
+-
+CLSafeQueue.h
+/home/lzy/Workspace/ThreadPool/include/CLSafeQueue.h
+
+/home/lzy/Workspace/ThreadPool/include/CLSafeQueue.h
+condition_variable
+-
+mutex
+-
+queue
+-
+
+/home/lzy/Workspace/ThreadPool/src/CLOuterSort.cpp
+../include/CLOuterSort.h
+/home/lzy/Workspace/ThreadPool/include/CLOuterSort.h
+iostream
+-
+

@@ -1,1 +1,0 @@
-/usr/bin/c++   -O0 -Wall -g -ggdb   CMakeFiles/SafeQueueTest.dir/SafeQueueTest.cpp.o  -o SafeQueueTest  -lpthread -lgtest 

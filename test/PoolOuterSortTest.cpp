@@ -1,57 +1,50 @@
-// #include <gtest/gtest.h>
+#include <gtest/gtest.h>
 
-#include <stdexcept>
+#include <cstdint>
+#include <cstdio>
+#include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
 
 #include "../include/CLOuterSort.h"
 
-// TEST(OuterSortTest, sort) {
-//   srand(time(NULL));
-//   std::vector<std::string> vec = {"test1", "test2"};
-//   neo::OuterSort outerSort(2, vec);
-//   outerSort.run();
-//   sleep(3);
-//   // std::string final = outerSort.getfinalfile();
-//   std::string final = "mttest2";
-//   FILE *fp1 = fopen(final.c_str(), "rb");
-//   fseek(fp1, 0, SEEK_END);
-//   int len = ftell(fp1) / sizeof(uint64_t);
-//   // std::cout << len << std::endl;
-//   uint64_t *buf = (uint64_t *)malloc(len * sizeof(uint64_t));
-//   fread(buf, sizeof(uint64_t), len, fp1);
-//   for (int i = 0; i < len - 1; ++i) {
-//     EXPECT_LE(buf[i], buf[i + 1]);
-//   }
+void write_file(const std::string &path, int n) {
+  uint64_t *a = (uint64_t *)malloc(n * sizeof(uint64_t));
+  for (int i = 0; i < n; ++i) a[i] = rand() % 100000000;
+  FILE *fp = fopen(path.c_str(), "wb+");
+  fwrite(a, sizeof(uint64_t), n, fp);
+  free(a);
+  FILE *fp1 = fopen(path.c_str(), "rb");
+  fseek(fp1, 0, SEEK_END);
+  fclose(fp);
+  fclose(fp1);
+}
 
-//   // ASSERT_EQ(len, 1000);
-//   fclose(fp1);
-//   free(buf);
-// }
-
-int main() {
-  // testing::InitGoogleTest();
-  // return RUN_ALL_TESTS();
+TEST(OuterSort, TwofilesTest) {
+  // 两个文件各写入10000个随机数
+  write_file("test1", 10000);
+  write_file("test2", 10000);
   srand(time(NULL));
   std::vector<std::string> vec = {"test1", "test2"};
   neo::OuterSort outerSort(2, vec);
-  outerSort.run();
-  sleep(3);
-  // std::string final = outerSort.getfinalfile();
-  std::string final = "mttest2";
-  FILE *fp1 = fopen(final.c_str(), "rb");
-  fseek(fp1, 0, SEEK_END);
-  int len = ftell(fp1) / sizeof(uint64_t);
-  // std::cout << len << std::endl;
-  uint64_t *buf = (uint64_t *)malloc(len * sizeof(uint64_t));
-  fread(buf, sizeof(uint64_t), len, fp1);
-  for (int i = 0; i < len - 1; ++i) {
-    if (buf[i] > buf[i + 1]) {
-      std::runtime_error("sort error\n");
-    }
-  }
+  std::string final2 = outerSort.run();
 
-  // ASSERT_EQ(len, 1000);
-  fclose(fp1);
+  FILE *fp = fopen(final2.c_str(), "rb");
+  fseek(fp, 0, SEEK_END);
+  long len = ftell(fp) / sizeof(uint64_t);
+  fseek(fp, 0, SEEK_SET);
+
+  std::cout << "len: " << len << std::endl;
+  uint64_t *buf = (uint64_t *)malloc(len * sizeof(uint64_t));
+  fread(buf, sizeof(uint64_t), len, fp);
+  for (int i = 0; i < len - 1; ++i) {
+    ASSERT_LE(buf[i], buf[i + 1]);
+  }
+  ASSERT_EQ(len, 20000);
   free(buf);
+}
+int main() {
+  testing::InitGoogleTest();
+  return RUN_ALL_TESTS();
 }

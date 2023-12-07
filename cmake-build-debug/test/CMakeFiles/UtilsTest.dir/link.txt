@@ -1,1 +1,0 @@
-/usr/bin/c++   -O0 -Wall -g -ggdb   CMakeFiles/UtilsTest.dir/UtilsTest.cpp.o  -o UtilsTest  -lpthread -lgtest ../src/libCLUtils.a 

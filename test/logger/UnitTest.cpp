@@ -2,6 +2,7 @@
 #include <inttypes.h>
 #include <sys/time.h>
 
+#include "../../include/logger/CLFileUtil.hpp"
 #include "../../include/logger/CLTimeStamp.hpp"
 
 TEST(TimeStampUnitTest, nowtest) {
@@ -52,4 +53,12 @@ TEST(TimeStampUnitTest, toStringtest) {
   TimeStamp t(tv.tv_sec * 1000 * 1000 + tv.tv_usec);
   std::string str = t.toString();
   EXPECT_EQ(str, str2);
+}
+
+TEST(FileUtilTest, AppendFiletest) {
+  const std::string str = "test.txt";
+  AppendFile file(str);
+  file.append("hello world\n", 12);
+  file.flush();
+  EXPECT_EQ(file.writtenBytes(), 12);
 }

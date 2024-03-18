@@ -105,6 +105,14 @@ build src/rebuild_cache: phony src/CMakeFiles/rebuild_cache.util
 
 build cmake_object_order_depends_target_LOGGER: phony || src/logger/CMakeFiles/LOGGER.dir
 
+build src/logger/CMakeFiles/LOGGER.dir/CLFileUtil.cpp.o: CXX_COMPILER__LOGGER_Debug /home/lzy/Workspace/TinyNetLib/src/logger/CLFileUtil.cpp || cmake_object_order_depends_target_LOGGER
+  DEFINES = -D__DEBUG__
+  DEP_FILE = src/logger/CMakeFiles/LOGGER.dir/CLFileUtil.cpp.o.d
+  FLAGS = -O0 -Wall -g -ggdb -std=gnu++17
+  INCLUDES = -I/home/lzy/Workspace/TinyNetLib/include
+  OBJECT_DIR = src/logger/CMakeFiles/LOGGER.dir
+  OBJECT_FILE_DIR = src/logger/CMakeFiles/LOGGER.dir
+
 build src/logger/CMakeFiles/LOGGER.dir/CLLogStream.cpp.o: CXX_COMPILER__LOGGER_Debug /home/lzy/Workspace/TinyNetLib/src/logger/CLLogStream.cpp || cmake_object_order_depends_target_LOGGER
   DEFINES = -D__DEBUG__
   DEP_FILE = src/logger/CMakeFiles/LOGGER.dir/CLLogStream.cpp.o.d
@@ -137,7 +145,7 @@ build src/logger/CMakeFiles/LOGGER.dir/CLTimeStamp.cpp.o: CXX_COMPILER__LOGGER_D
 #############################################
 # Link the static library src/logger/libLOGGER.a
 
-build src/logger/libLOGGER.a: CXX_STATIC_LIBRARY_LINKER__LOGGER_Debug src/logger/CMakeFiles/LOGGER.dir/CLLogStream.cpp.o src/logger/CMakeFiles/LOGGER.dir/CLThread.cpp.o src/logger/CMakeFiles/LOGGER.dir/CLTimeStamp.cpp.o
+build src/logger/libLOGGER.a: CXX_STATIC_LIBRARY_LINKER__LOGGER_Debug src/logger/CMakeFiles/LOGGER.dir/CLFileUtil.cpp.o src/logger/CMakeFiles/LOGGER.dir/CLLogStream.cpp.o src/logger/CMakeFiles/LOGGER.dir/CLThread.cpp.o src/logger/CMakeFiles/LOGGER.dir/CLTimeStamp.cpp.o
   LANGUAGE_COMPILE_FLAGS = -O0 -Wall -g -ggdb
   OBJECT_DIR = src/logger/CMakeFiles/LOGGER.dir
   POST_BUILD = :

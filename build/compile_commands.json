@@ -1,6 +1,11 @@
 [
 {
   "directory": "/home/lzy/Workspace/TinyNetLib/build",
+  "command": "/usr/bin/g++ -D__DEBUG__ -I/home/lzy/Workspace/TinyNetLib/include  -O0 -Wall -g -ggdb -std=gnu++17 -o src/logger/CMakeFiles/LOGGER.dir/CLFileUtil.cpp.o -c /home/lzy/Workspace/TinyNetLib/src/logger/CLFileUtil.cpp",
+  "file": "/home/lzy/Workspace/TinyNetLib/src/logger/CLFileUtil.cpp"
+},
+{
+  "directory": "/home/lzy/Workspace/TinyNetLib/build",
   "command": "/usr/bin/g++ -D__DEBUG__ -I/home/lzy/Workspace/TinyNetLib/include  -O0 -Wall -g -ggdb -std=gnu++17 -o src/logger/CMakeFiles/LOGGER.dir/CLLogStream.cpp.o -c /home/lzy/Workspace/TinyNetLib/src/logger/CLLogStream.cpp",
   "file": "/home/lzy/Workspace/TinyNetLib/src/logger/CLLogStream.cpp"
 },

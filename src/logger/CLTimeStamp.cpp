@@ -1,4 +1,4 @@
-#include "../../include/logger/CLTimeStamp.hpp"
+#include "logger/CLTimeStamp.hpp"
 
 #include <inttypes.h>
 #include <sys/time.h>

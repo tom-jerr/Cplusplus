@@ -1,4 +1,4 @@
-#include "../../include/logger/CLLogStream.hpp"
+#include "logger/CLLogStream.hpp"
 
 #include <algorithm>
 #include <cassert>

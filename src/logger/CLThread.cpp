@@ -1,4 +1,4 @@
-#include "../../include/logger/CLThread.hpp"
+#include "logger/CLThread.hpp"
 
 #include <cassert>
 
@@ -22,6 +22,7 @@ void Thread::join() {
   assert(m_started_);
   assert(!m_joined_);
   m_thread_->join();
+  m_joined_ = true;
 }
 
 void Thread::detach() {

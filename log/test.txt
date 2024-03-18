@@ -1,0 +1,9 @@
+hello thread1
+hello main thread
+hello thread2
+hello thread1
+hello main thread
+hello thread2
+hello main thread
+hello thread2
+hello thread1

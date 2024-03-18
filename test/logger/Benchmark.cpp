@@ -4,8 +4,8 @@
 
 #include <sstream>
 
-#include "../../include/logger/CLLogStream.hpp"
-#include "../../include/logger/CLTimeStamp.hpp"
+#include "logger/CLLogStream.hpp"
+#include "logger/CLTimeStamp.hpp"
 
 const size_t N = 1000000;
 

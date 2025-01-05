@@ -16,7 +16,7 @@
 
 #include "utils.h"
 
-std::string kYourName = "STUDENT TODO"; // Don't forget to change this!
+std::string kYourName = "STUDENT LZY"; // Don't forget to change this!
 
 /**
  * Takes in a file name and returns a set containing all of the applicant names as a set.
@@ -29,8 +29,16 @@ std::string kYourName = "STUDENT TODO"; // Don't forget to change this!
  * below it) to use a `std::unordered_set` instead. If you do so, make sure
  * to also change the corresponding functions in `utils.h`.
  */
-std::set<std::string> get_applicants(std::string filename) {
+std::unordered_set<std::string> get_applicants(std::string filename) {
   // STUDENT TODO: Implement this function.
+  std::ifstream file(filename);
+  std::unordered_set<std::string> applicants;
+  std::string name;
+  while (std::getline(file, name)) {
+    // std::cout << name << std::endl;
+    applicants.insert(name);
+  }
+  return applicants;
 }
 
 /**
@@ -41,8 +49,16 @@ std::set<std::string> get_applicants(std::string filename) {
  * @param students  The set of student names.
  * @return          A queue containing pointers to each matching name.
  */
-std::queue<const std::string*> find_matches(std::string name, std::set<std::string>& students) {
+std::queue<const std::string*> find_matches(std::string name, std::unordered_set<std::string>& students) {
   // STUDENT TODO: Implement this function.
+  std::queue<const std::string*> matches;
+  // std::cout << name << std::endl;
+  for (const std::string& student : students) {
+    if (student == name) {
+      matches.push(&student);
+    }
+  }
+  return matches;
 }
 
 /**
@@ -57,6 +73,13 @@ std::queue<const std::string*> find_matches(std::string name, std::set<std::stri
  */
 std::string get_match(std::queue<const std::string*>& matches) {
   // STUDENT TODO: Implement this function.
+  if(matches.empty()) {
+    return "NO MATCHES FOUND.";
+  }
+
+  std::string true_match = *(matches.front());
+  matches.pop();
+  return true_match;
 }
 
 /* #### Please don't modify this call to the autograder! #### */

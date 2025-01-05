@@ -2,7 +2,8 @@
 
 #include <cstddef>
 #include <utility>
-
+// #include <functional>
+// using Deleter = std::function<void(void*)>;
 /**
  * @brief A smart pointer that owns an object and deletes it when it goes out of scope.
  * @tparam T The type of the object to manage.
@@ -11,24 +12,24 @@
 template <typename T> class unique_ptr {
 private:
   /* STUDENT TODO: What data must a unique_ptr keep track of? */
-
+  T* raw_ptr_;
 public:
   /**
    * @brief Constructs a new `unique_ptr` from the given pointer.
    * @param ptr The pointer to manage.
    * @note You should avoid using this constructor directly and instead use `make_unique()`.
    */
-  unique_ptr(T* ptr) {
+  unique_ptr(T* ptr):raw_ptr_(ptr) {
     /* STUDENT TODO: Implement the constructor */
-    throw std::runtime_error("Not implemented: unique_ptr(T* ptr)");
+    // throw std::runtime_error("Not implemented: unique_ptr(T* ptr)");
   }
 
   /**
    * @brief Constructs a new `unique_ptr` from `nullptr`.
    */
-  unique_ptr(std::nullptr_t) {
+  unique_ptr(std::nullptr_t):raw_ptr_(nullptr){
     /* STUDENT TODO: Implement the nullptr constructor */
-    throw std::runtime_error("Not implemented: unique_ptr(std::nullptr_t)");
+    // throw std::runtime_error("Not implemented: unique_ptr(std::nullptr_t)");
   }
 
   /**
@@ -43,7 +44,11 @@ public:
    */
   T& operator*() {
     /* STUDENT TODO: Implement the dereference operator */
-    throw std::runtime_error("Not implemented: operator*()");
+    // throw std::runtime_error("Not implemented: operator*()");
+    if(raw_ptr_ == nullptr){
+      throw std::runtime_error("Dereferencing nullptr");
+    }
+    return *raw_ptr_;
   }
 
   /**
@@ -52,7 +57,11 @@ public:
    */
   const T& operator*() const {
     /* STUDENT TODO: Implement the dereference operator (const) */
-    throw std::runtime_error("Not implemented: operator*() const");
+    // throw std::runtime_error("Not implemented: operator*() const");
+    if(raw_ptr_ == nullptr){
+      throw std::runtime_error("Dereferencing nullptr");
+    }
+    return *raw_ptr_;
   }
 
   /**
@@ -62,7 +71,11 @@ public:
    */
   T* operator->() {
     /* STUDENT TODO: Implement the arrow operator */
-    throw std::runtime_error("Not implemented: operator->()");
+    // throw std::runtime_error("Not implemented: operator->()");
+    if(raw_ptr_ == nullptr){
+      throw std::runtime_error("Dereferencing nullptr");
+    }
+    return raw_ptr_;   
   }
 
   /**
@@ -72,7 +85,11 @@ public:
    */
   const T* operator->() const {
     /* STUDENT TODO: Implement the arrow operator */
-    throw std::runtime_error("Not implemented: operator->() const");
+    // throw std::runtime_error("Not implemented: operator->() const");
+    if(raw_ptr_ == nullptr){
+      throw std::runtime_error("Dereferencing nullptr");
+    }
+    return raw_ptr_; 
   }
 
   /**
@@ -82,7 +99,8 @@ public:
    */
   operator bool() const {
     /* STUDENT TODO: Implement the boolean conversion operator */
-    throw std::runtime_error("Not implemented: operator bool() const");
+    // throw std::runtime_error("Not implemented: operator bool() const");
+    return raw_ptr_ != nullptr;
   }
 
   /** STUDENT TODO: In the space below, do the following:
@@ -92,6 +110,35 @@ public:
    * - Implement the move constructor
    * - Implement the move assignment operator
    */
+  T* get() const{
+    return raw_ptr_;
+  }
+  T* get(){
+    return raw_ptr_;
+  }
+  ~unique_ptr(){
+    if(raw_ptr_ != nullptr){
+      delete raw_ptr_;
+    }
+  }
+
+  unique_ptr(const unique_ptr<T>&) = delete;
+  unique_ptr<T>& operator=(const unique_ptr<T>&) = delete;
+  unique_ptr(unique_ptr<T>&& other) {
+    raw_ptr_ = other.raw_ptr_;
+    other.raw_ptr_ = nullptr;
+  }
+  unique_ptr<T>& operator=(unique_ptr<T>&& other) {
+    if(this == &other){
+      return *this;
+    }
+    if(raw_ptr_ != nullptr){
+      delete raw_ptr_;
+    }
+    raw_ptr_ = other.raw_ptr_;
+    other.raw_ptr_ = nullptr;
+    return *this;
+  }
 };
 
 /**

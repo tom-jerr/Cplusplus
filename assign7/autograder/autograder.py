@@ -113,11 +113,11 @@ if __name__ == "__main__":
         lambda: verify_output(
             "linked_list",
             expected=[
-                "Constructing node with value 'Sean'",
-                "Constructing node with value 'Chris'",
-                "Constructing node with value 'Keith'",
-                "Constructing node with value 'Fabio'",
                 "Constructing node with value 'Jacob'",
+                "Constructing node with value 'Fabio'",
+                "Constructing node with value 'Keith'",
+                "Constructing node with value 'Chris'",
+                "Constructing node with value 'Sean'",
                 "Jacob",
                 "Fabio",
                 "Keith",

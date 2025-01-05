@@ -6,6 +6,9 @@
  * implementing the assignment. You don't need to modify anything here,
  * but feel free to look around.
  */
+#include <string>
+#include <vector>
+#include <sstream>
 
 /**
  * Forward declarations of some important methods. Don't worry about these!

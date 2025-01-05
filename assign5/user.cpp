@@ -11,6 +11,69 @@ User::User(const std::string& name)
 {
 }
 
+User::User(const User& other)
+  : _name(other._name)
+  , _friends(new std::string[other._capacity])
+  , _size(other._size)
+  , _capacity(other._capacity)
+{
+  for (size_t i = 0; i < _size; ++i) {
+    _friends[i] = other._friends[i];
+  }
+}
+
+User& User::operator=(const User& user) {
+  if (this == &user) {
+    return *this;
+  }
+
+  _name = user._name;
+  _size = user._size;
+  _capacity = user._capacity;
+
+  delete[] _friends;
+  _friends = new std::string[_capacity];
+  for (size_t i = 0; i < _size; ++i) {
+    _friends[i] = user._friends[i];
+  }
+
+  return *this;
+}
+
+User::~User() {
+  if(_friends != nullptr) {
+    delete[] _friends;
+  }
+}
+
+std::ostream& operator<<(std::ostream& os, const User& user) {
+  os << "User(name=" << user._name << ", ";
+  os << "friends=" << "[";
+  if(user._size == 1)
+    os << user._friends[0] << "])";
+  else if(user._size == 0)
+    os << "])";
+  else {
+    for (size_t i = 0; i < user._size - 1; ++i) {
+      os << user._friends[i] << ", ";
+    }
+    os << user._friends[user._size - 1] << "])";
+  }
+
+
+  return os;
+}
+
+User& User::operator+=(User& other) {
+  add_friend(other.get_name());
+  other.add_friend(get_name());
+  return *this;
+}
+
+bool User::operator<(const User& other) const {
+  return _name < other._name;
+}
+
 /**
  * Adds a friend to this User's list of friends.
  * @param name The name of the friend to add.

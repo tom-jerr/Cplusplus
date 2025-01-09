@@ -3,14 +3,12 @@
 #include "gmock/gmock.h"
 #include "hw1.h"
 
-/*
+namespace algebra{
 TEST(HW1Test, ZEROS) {
     Matrix matrix{algebra::zeros(5, 6)};
-
     // check the size of the matrix
     EXPECT_EQ(matrix.size(), 5);
     EXPECT_EQ(matrix[0].size(), 6);
-
     // check the value of the elements
     for (const auto& row : matrix)
         for (const auto& elem : row)
@@ -360,7 +358,7 @@ TEST(HW1Test, BONUS) {
     EXPECT_NEAR(res2[2][1], 0, 0.03);
     EXPECT_NEAR(res2[2][2], 39/4.0, 0.03);
 }
-*/
 
+} // namespace algebra
 
 

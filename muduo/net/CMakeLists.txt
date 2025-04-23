@@ -25,10 +25,11 @@ set(net_SRCS
   TcpServer.cc
   Timer.cc
   TimerQueue.cc
+  iouringfile/FileUring.cpp
   )
 
 add_library(muduo_net ${net_SRCS})
-target_link_libraries(muduo_net muduo_base)
+target_link_libraries(muduo_net muduo_base uring)
 
 #add_library(muduo_net_cpp11 ${net_SRCS})
 #target_link_libraries(muduo_net_cpp11 muduo_base_cpp11)
@@ -50,6 +51,8 @@ set(HEADERS
   TcpConnection.h
   TcpServer.h
   TimerId.h
+  RequestContext.h
+  iouringfile/FileUring.h
   )
 install(FILES ${HEADERS} DESTINATION include/muduo/net)
 

@@ -11,17 +11,21 @@
 #ifndef MUDUO_NET_CHANNEL_H
 #define MUDUO_NET_CHANNEL_H
 
-#include "muduo/base/noncopyable.h"
 #include "muduo/base/Timestamp.h"
+#include "muduo/base/noncopyable.h"
+#include "muduo/net/Callbacks.h"
 
 #include <functional>
+#include <liburing/io_uring.h>
 #include <memory>
 
-namespace muduo
-{
-namespace net
-{
-
+namespace muduo {
+namespace net {
+enum class RequestType : int8_t {
+  None = 0,
+  Read,
+  Write, // 暂时文件读写只有这两个操作
+};
 class EventLoop;
 
 ///
@@ -30,28 +34,47 @@ class EventLoop;
 /// This class doesn't own the file descriptor.
 /// The file descriptor could be a socket,
 /// an eventfd, a timerfd, or a signalfd
-class Channel : noncopyable
-{
- public:
+class Channel : noncopyable {
+public:
   typedef std::function<void()> EventCallback;
   typedef std::function<void(Timestamp)> ReadEventCallback;
 
-  Channel(EventLoop* loop, int fd);
+  Channel(EventLoop *loop, int fd);
   ~Channel();
 
   void handleEvent(Timestamp receiveTime);
-  void setReadCallback(ReadEventCallback cb)
-  { readCallback_ = std::move(cb); }
-  void setWriteCallback(EventCallback cb)
-  { writeCallback_ = std::move(cb); }
-  void setCloseCallback(EventCallback cb)
-  { closeCallback_ = std::move(cb); }
-  void setErrorCallback(EventCallback cb)
-  { errorCallback_ = std::move(cb); }
+  void setReadCallback(ReadEventCallback cb) { readCallback_ = std::move(cb); }
+  void setWriteCallback(EventCallback cb) { writeCallback_ = std::move(cb); }
+  void setCloseCallback(EventCallback cb) { closeCallback_ = std::move(cb); }
+  void setErrorCallback(EventCallback cb) { errorCallback_ = std::move(cb); }
+  /**
+   * @brief for iouring file
+   *
+   */
+  void callReadCallback() {
+    if (readCallback_) {
+      readCallback_(Timestamp::now());
+    }
+  }
+  void callWriteCallback() {
+    if (writeCallback_) {
+      writeCallback_();
+    }
+  }
+  void callCloseCallback() {
+    if (closeCallback_) {
+      closeCallback_();
+    }
+  }
+  void callErrorCallback() {
+    if (errorCallback_) {
+      errorCallback_();
+    }
+  }
 
   /// Tie this channel to the owner object managed by shared_ptr,
   /// prevent the owner object being destroyed in handleEvent.
-  void tie(const std::shared_ptr<void>&);
+  void tie(const std::shared_ptr<void> &);
 
   int fd() const { return fd_; }
   int events() const { return events_; }
@@ -59,11 +82,26 @@ class Channel : noncopyable
   // int revents() const { return revents_; }
   bool isNoneEvent() const { return events_ == kNoneEvent; }
 
-  void enableReading() { events_ |= kReadEvent; update(); }
-  void disableReading() { events_ &= ~kReadEvent; update(); }
-  void enableWriting() { events_ |= kWriteEvent; update(); }
-  void disableWriting() { events_ &= ~kWriteEvent; update(); }
-  void disableAll() { events_ = kNoneEvent; update(); }
+  void enableReading() {
+    events_ |= kReadEvent;
+    update();
+  }
+  void disableReading() {
+    events_ &= ~kReadEvent;
+    update();
+  }
+  void enableWriting() {
+    events_ |= kWriteEvent;
+    update();
+  }
+  void disableWriting() {
+    events_ &= ~kWriteEvent;
+    update();
+  }
+  void disableAll() {
+    events_ = kNoneEvent;
+    update();
+  }
   bool isWriting() const { return events_ & kWriteEvent; }
   bool isReading() const { return events_ & kReadEvent; }
 
@@ -77,10 +115,10 @@ class Channel : noncopyable
 
   void doNotLogHup() { logHup_ = false; }
 
-  EventLoop* ownerLoop() { return loop_; }
+  EventLoop *ownerLoop() { return loop_; }
   void remove();
 
- private:
+private:
   static string eventsToString(int fd, int ev);
 
   void update();
@@ -90,12 +128,12 @@ class Channel : noncopyable
   static const int kReadEvent;
   static const int kWriteEvent;
 
-  EventLoop* loop_;
-  const int  fd_;
-  int        events_;
-  int        revents_; // it's the received event types of epoll or poll
-  int        index_; // used by Poller.
-  bool       logHup_;
+  EventLoop *loop_;
+  const int fd_;
+  int events_;
+  int revents_; // it's the received event types of epoll or poll
+  int index_;   // used by Poller.
+  bool logHup_;
 
   std::weak_ptr<void> tie_;
   bool tied_;
@@ -105,9 +143,43 @@ class Channel : noncopyable
   EventCallback writeCallback_;
   EventCallback closeCallback_;
   EventCallback errorCallback_;
+
+  /**
+   * @brief for iouring file
+   *
+   */
+  struct io_uring_cqe *cqe_;
+  struct io_uring_sqe *sqe_;
+  RequestType type_;
+  UringCompleteCallback uringReadCallback_;
+  UringCompleteCallback uringWriteCallback_;
+
+public:
+  RequestType getType() const { return type_; }
+  void setType(RequestType type) { type_ = type; }
+
+  void setCQE(struct io_uring_cqe *cqe) { cqe_ = cqe; }
+  struct io_uring_cqe *getCQE() const { return cqe_; }
+
+  void setUringReadCallback(UringCompleteCallback cb) {
+    uringReadCallback_ = std::move(cb);
+  }
+  void setUringWriteCallback(UringCompleteCallback cb) {
+    uringWriteCallback_ = std::move(cb);
+  }
+  void callUringReadCallback() {
+    if (uringReadCallback_) {
+      uringReadCallback_(cqe_);
+    }
+  }
+  void callUringWriteCallback() {
+    if (uringWriteCallback_) {
+      uringWriteCallback_(cqe_);
+    }
+  }
 };
 
-}  // namespace net
-}  // namespace muduo
+} // namespace net
+} // namespace muduo
 
-#endif  // MUDUO_NET_CHANNEL_H
+#endif // MUDUO_NET_CHANNEL_H

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.10...3.27)
 
 project(muduo C CXX)
 
@@ -7,7 +7,7 @@ enable_testing()
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # only build examples if this is the main project
 if(CMAKE_PROJECT_NAME STREQUAL "muduo")
   option(MUDUO_BUILD_EXAMPLES "Build Muduo examples" ON)
@@ -30,7 +30,7 @@ set(CXX_FLAGS
  -Wwrite-strings
  -march=native
  # -MMD
- -std=c++11
+ -std=c++17
  -rdynamic
  )
 if(CMAKE_BUILD_BITS EQUAL 32)
@@ -50,7 +50,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
-find_package(Boost REQUIRED)
+cmake_policy(SET CMP0167 NEW)
+find_package(Boost REQUIRED CONFIG)
 find_package(Protobuf)
 find_package(CURL)
 find_package(ZLIB)
@@ -105,13 +106,14 @@ message(STATUS "CXX_FLAGS = " ${CMAKE_CXX_FLAGS} " " ${CMAKE_CXX_FLAGS_${BUILD_T
 
 add_subdirectory(muduo/base)
 add_subdirectory(muduo/net)
+add_subdirectory(test)
 
-if(MUDUO_BUILD_EXAMPLES)
-  add_subdirectory(contrib)
-  add_subdirectory(examples)
-else()
-  if(CARES_INCLUDE_DIR AND CARES_LIBRARY)
-    add_subdirectory(examples/cdns)
-  endif()
-endif()
+# if(MUDUO_BUILD_EXAMPLES)
+#   add_subdirectory(contrib)
+#   add_subdirectory(examples)
+# else()
+#   if(CARES_INCLUDE_DIR AND CARES_LIBRARY)
+#     add_subdirectory(examples/cdns)
+#   endif()
+# endif()
 

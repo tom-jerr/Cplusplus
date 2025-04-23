@@ -13,36 +13,36 @@
 
 #include <atomic>
 #include <functional>
+#include <liburing.h> // Include the header that defines struct io_uring
+#include <memory>
 #include <vector>
 
 #include <boost/any.hpp>
 
-#include "muduo/base/Mutex.h"
 #include "muduo/base/CurrentThread.h"
+#include "muduo/base/Mutex.h"
 #include "muduo/base/Timestamp.h"
 #include "muduo/net/Callbacks.h"
 #include "muduo/net/TimerId.h"
 
-namespace muduo
-{
-namespace net
-{
+namespace muduo {
+namespace net {
 
 class Channel;
 class Poller;
 class TimerQueue;
+class RequestContext;
 
 ///
 /// Reactor, at most one per thread.
 ///
 /// This is an interface class, so don't expose too much details.
-class EventLoop : noncopyable
-{
- public:
+class EventLoop : noncopyable {
+public:
   typedef std::function<void()> Functor;
 
   EventLoop();
-  ~EventLoop();  // force out-line dtor, for std::unique_ptr members.
+  ~EventLoop(); // force out-line dtor, for std::unique_ptr members.
 
   ///
   /// Loops forever.
@@ -101,15 +101,13 @@ class EventLoop : noncopyable
 
   // internal usage
   void wakeup();
-  void updateChannel(Channel* channel);
-  void removeChannel(Channel* channel);
-  bool hasChannel(Channel* channel);
+  void updateChannel(Channel *channel);
+  void removeChannel(Channel *channel);
+  bool hasChannel(Channel *channel);
 
   // pid_t threadId() const { return threadId_; }
-  void assertInLoopThread()
-  {
-    if (!isInLoopThread())
-    {
+  void assertInLoopThread() {
+    if (!isInLoopThread()) {
       abortNotInLoopThread();
     }
   }
@@ -117,29 +115,33 @@ class EventLoop : noncopyable
   // bool callingPendingFunctors() const { return callingPendingFunctors_; }
   bool eventHandling() const { return eventHandling_; }
 
-  void setContext(const boost::any& context)
-  { context_ = context; }
+  void setContext(const boost::any &context) { context_ = context; }
 
-  const boost::any& getContext() const
-  { return context_; }
+  const boost::any &getContext() const { return context_; }
 
-  boost::any* getMutableContext()
-  { return &context_; }
+  boost::any *getMutableContext() { return &context_; }
 
-  static EventLoop* getEventLoopOfCurrentThread();
+  static EventLoop *getEventLoopOfCurrentThread();
 
- private:
+  /**
+   * @brief for iouring
+   *
+   */
+  int getEventFd() const { return event_fd_; }
+  // struct io_uring getIoUring() const { return io_uring_; }
+
+private:
   void abortNotInLoopThread();
-  void handleRead();  // waked up
+  void handleRead(); // waked up
   void doPendingFunctors();
 
   void printActiveChannels() const; // DEBUG
 
-  typedef std::vector<Channel*> ChannelList;
+  typedef std::vector<Channel *> ChannelList;
 
   bool looping_; /* atomic */
   std::atomic<bool> quit_;
-  bool eventHandling_; /* atomic */
+  bool eventHandling_;          /* atomic */
   bool callingPendingFunctors_; /* atomic */
   int64_t iteration_;
   const pid_t threadId_;
@@ -154,13 +156,28 @@ class EventLoop : noncopyable
 
   // scratch variables
   ChannelList activeChannels_;
-  Channel* currentActiveChannel_;
+  Channel *currentActiveChannel_;
 
   mutable MutexLock mutex_;
   std::vector<Functor> pendingFunctors_ GUARDED_BY(mutex_);
+  /**
+   * @brief for iouring member
+   *
+   */
+  const int event_fd_;                        // notify iouring io event finish
+  std::unique_ptr<Channel> event_channel_;    // event channel
+  std::shared_ptr<struct io_uring> io_uring_; // io_uring instance
+
+public:
+  /**
+   * @brief for iouring function
+   *
+   */
+  void submitUringRequest(RequestContext *context);
+  void handleUringReqComplete(); // handle iouring request complete
 };
 
-}  // namespace net
-}  // namespace muduo
+} // namespace net
+} // namespace muduo
 
-#endif  // MUDUO_NET_EVENTLOOP_H
+#endif // MUDUO_NET_EVENTLOOP_H

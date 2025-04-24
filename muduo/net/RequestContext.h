@@ -22,9 +22,11 @@ public:
   RequestContext(Channel *channel, void *buffer, size_t data_size,
                  size_t offset, size_t req_id,
                  RequestType type = RequestType::None,
-                 std::shared_ptr<std::promise<bool>> promise_ptr = nullptr)
+                 std::shared_ptr<std::promise<bool>> promise_ptr = nullptr,
+                 std::function<void()> callback = nullptr)
       : channel_(channel), buffer_(buffer), data_size_(data_size),
-        offset_(offset), id_(req_id), type_(type), promise_ptr_(promise_ptr) {}
+        offset_(offset), id_(req_id), type_(type), promise_ptr_(promise_ptr),
+        user_callback_(callback) {}
   ~RequestContext() = default;
   Channel *getChannel() const { return channel_; }
   void *getBuffer() const { return buffer_; }
@@ -33,6 +35,11 @@ public:
   size_t getReqId() const { return id_; }
   RequestType getRequestType() const { return type_; }
   void setComplete() { promise_ptr_->set_value(true); }
+  void execUserCallback() {
+    if (user_callback_) {
+      user_callback_();
+    }
+  }
 
 private:
   Channel *channel_;
@@ -42,6 +49,7 @@ private:
   size_t id_;
   RequestType type_{RequestType::None};
   std::shared_ptr<std::promise<bool>> promise_ptr_;
+  std::function<void()> user_callback_;
 };
 } // namespace net
 } // namespace muduo

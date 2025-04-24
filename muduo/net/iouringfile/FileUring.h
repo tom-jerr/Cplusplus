@@ -13,13 +13,25 @@
 
 #include "muduo/net/Channel.h"
 #include "muduo/net/EventLoop.h"
+#include "muduo/net/EventLoopThreadPool.h"
 #include <cstddef>
 #include <fcntl.h>
-#include <unordered_map>
+// #include <unordered_map>
 // #include <map>
 #include <future>
+#include <memory>
 namespace muduo {
 namespace net {
+
+/**
+ * @brief This class if for async file operation by iouring, we don't want
+ * combine it with EventLoopThreadPool, because we maybe have many files, and we
+ * don't want to create many EventLoopThreadPool, so we just use one
+ * EventLoopThreadPool, we just first define one EventLoopThreadPool, and then
+ * create many FileUring objects, and then submit IO operations to
+ * EventLoopThreadPool, and execute eventloop callback and user callback.
+ *
+ */
 class FileUring {
 
 public:
@@ -38,7 +50,6 @@ private:
   std::string file_path_;
   bool whether_direct_{false};
   size_t request_id_{0};
-  std::unordered_map<size_t, RequestContext *> request_map_;
 };
 
 } // namespace net

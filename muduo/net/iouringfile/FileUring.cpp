@@ -48,14 +48,13 @@ std::future<bool> FileUring::asyncRead(void *buffer, size_t data_size,
   if (file_channel_) {
     auto promise_ptr = std::make_shared<std::promise<bool>>();
     auto future = promise_ptr->get_future();
-    RequestContext *context =
-        new RequestContext(file_channel_, buffer, data_size, offset,
-                           request_id_, RequestType::Read, promise_ptr);
+    RequestContext *context = new RequestContext(
+        file_channel_, buffer, data_size, offset, request_id_,
+        RequestType::Read, promise_ptr, callback);
 
-    request_map_.insert({request_id_, context});
+    // request_map_.insert({request_id_, context});
     // LOG_INFO << "asyncRead context: " << context;
-    file_channel_->setUringReadCallback([this,
-                                         callback](struct io_uring_cqe *cqe) {
+    file_channel_->setUringReadCallback([](struct io_uring_cqe *cqe) {
       LOG_INFO << "Read callback triggered";
       RequestContext *cqe_context = nullptr;
       // 1. handel cqe io finished
@@ -64,24 +63,21 @@ std::future<bool> FileUring::asyncRead(void *buffer, size_t data_size,
                   << " (user_data=" << cqe->user_data << ")";
       } else {
         cqe_context = reinterpret_cast<RequestContext *>(cqe->user_data);
+        if (cqe_context == nullptr) {
+          LOG_ERROR << "user_data is null";
+          return;
+        }
         assert(cqe_context->getRequestType() == RequestType::Read);
-        LOG_INFO << "Read from file, data size: " << cqe->res << ", user_data: "
+        LOG_INFO << "Request Id: " << cqe_context->getReqId()
+                 << ", Read from file, data size: " << cqe->res
+                 << ", user_data: "
                  << reinterpret_cast<char *>(cqe_context->getBuffer());
-        callback();
-      }
-      if (cqe_context == nullptr) {
-        LOG_ERROR << "user_data is null";
-        return;
-      }
-      // 处理完成后删除请求上下文
-      auto iter = std::find_if(request_map_.begin(), request_map_.end(),
-                               [cqe_context](const auto &pair) {
-                                 return pair.first == cqe_context->getReqId();
-                               });
 
+        cqe_context->execUserCallback();
+      }
       cqe_context->setComplete();
-      delete iter->second;
-      // request_map_.erase(iter);
+      // 处理完成后删除请求上下文
+      delete cqe_context;
     });
     // file_channel_->setType(RequestType::Read);
     file_channel_->ownerLoop()->submitUringRequest(context);
@@ -103,12 +99,12 @@ std::future<bool> FileUring::asyncWrite(void *str, size_t data_size,
     auto future = promise_ptr->get_future();
     RequestContext *context =
         new RequestContext(file_channel_, str, data_size, offset, request_id_,
-                           RequestType::Write, promise_ptr);
+                           RequestType::Write, promise_ptr, callback);
 
-    request_map_.insert({request_id_, context});
-    file_channel_->setUringWriteCallback([this,
-                                          callback](struct io_uring_cqe *cqe) {
-      LOG_INFO << "Write callback triggered";
+    // request_map_.insert({request_id_, context});
+    // callback_map_.insert({request_id_, callback});
+    file_channel_->setUringWriteCallback([](struct io_uring_cqe *cqe) {
+      // LOG_INFO << "Write callback triggered";
       RequestContext *cqe_context = nullptr;
       // 1. handel cqe io finished
       if (cqe->res < 0) {
@@ -116,23 +112,20 @@ std::future<bool> FileUring::asyncWrite(void *str, size_t data_size,
                   << " (user_data=" << cqe->user_data << ")";
       } else {
         cqe_context = reinterpret_cast<RequestContext *>(cqe->user_data);
+
+        if (cqe_context == nullptr) {
+          LOG_ERROR << "user_data is null";
+          return;
+        }
         assert(cqe_context->getRequestType() == RequestType::Write);
-        LOG_INFO << "Write to file, data size: " << cqe->res;
-        callback();
-      }
-      if (cqe_context == nullptr) {
-        LOG_ERROR << "user_data is null";
-        return;
+        LOG_INFO << "Request id: " << cqe_context->getReqId()
+                 << ", Write to file, data size: " << cqe->res;
+        cqe_context->execUserCallback();
       }
 
-      // 处理完成后删除请求上下文
-      auto iter = std::find_if(request_map_.begin(), request_map_.end(),
-                               [cqe_context](const auto &pair) {
-                                 return pair.first == cqe_context->getReqId();
-                               });
       cqe_context->setComplete();
-      delete iter->second;
-      // request_map_.erase(iter);
+      // 处理完成后删除请求上下文
+      delete cqe_context;
     });
 
     // file_channel_->setType(RequestType::Write);

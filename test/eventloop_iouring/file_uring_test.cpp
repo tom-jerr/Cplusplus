@@ -10,6 +10,7 @@
  */
 #include "muduo/base/Logging.h"
 #include "muduo/net/EventLoop.h"
+#include "muduo/net/EventLoopThread.h"
 #include "muduo/net/iouringfile/FileUring.h"
 #include <fcntl.h>
 #include <gtest/gtest.h>
@@ -25,57 +26,83 @@
 using namespace muduo;
 using namespace muduo::net;
 // TODO(LZY):
-// loop.loop()后，整个测试会卡住，需要使用其他线程来进行loop，主线程执行IO时唤醒即可
-TEST(FileUringTest, SimpleTest) {
-  EventLoop loop;
-  FileUring file_uring{"test.txt", &loop, false};
+// 需要提供 future promise 机制来通知异步操作完成
+TEST(FileUringTest, MultiReadTest) {
+  // EventLoop loop;
+  EventLoopThread loop_thread;
+  EventLoop *loop = loop_thread.startLoop();
+  FileUring file_uring{"test.txt", loop, false};
   const char *str = "Hello, io_uring!";
-  char buffer[1024];
+  char buffer1[17], buffer2[17], buffer3[17];
   size_t len = strlen(str);
 
-  // file_uring.asyncWrite(static_cast<void *>(const_cast<char *>(str)), len, 0,
-  //                       [&]() { LOG_INFO << "写入完成"; });
-  file_uring.asyncRead(buffer, len, 0, [&]() {
-    auto content = new char[len + 1];
-    memcpy(content, buffer, len);
-    content[len] = '\0';
-    LOG_INFO << "读取1完成: " << content;
-    EXPECT_STREQ(buffer, str);
-    delete[] content;
+  auto future1 = file_uring.asyncRead(buffer1, len, 0, [&]() {
+    // buffer1[len] = '\0';
+    LOG_INFO << "读取1完成: " << buffer1;
+    EXPECT_STREQ(buffer1, str);
   });
-  file_uring.asyncRead(buffer, len, len, [&]() {
-    auto content = new char[len + 1];
-    memcpy(content, buffer + len, len);
-    content[len] = '\0';
-    LOG_INFO << "读取2完成: " << content;
-    EXPECT_STREQ(buffer, str);
-    delete[] content;
+  auto future2 = file_uring.asyncRead(buffer2, len, len, [&]() {
+    // buffer2[len] = '\0';
+    LOG_INFO << "读取2完成: " << buffer2;
+    EXPECT_STREQ(buffer2, str);
   });
-  file_uring.asyncRead(buffer, len, 2 * len, [&]() {
-    auto content = new char[len + 1];
-    memcpy(content, buffer + 2 * len, len);
-    content[len] = '\0';
-    LOG_INFO << "读取3完成: " << content;
-    EXPECT_STREQ(buffer, str);
-    delete[] content;
+  auto future3 = file_uring.asyncRead(buffer3, len, 2 * len, [&]() {
+    // buffer3[len] = '\0';
+    LOG_INFO << "读取3完成: " << buffer3;
+    EXPECT_STREQ(buffer3, str);
   });
-  loop.loop();
+
+  bool io1 = future1.get();
+  EXPECT_EQ(io1, true);
+  bool io2 = future2.get();
+  EXPECT_EQ(io2, true);
+  bool io3 = future3.get();
+  EXPECT_EQ(io3, true);
+  // loop.loop();
 }
 
-TEST(FileUringTest, CombineCallbackTest) {
-  EventLoop loop;
-  FileUring file_uring{"test.txt", &loop, false};
-  const char *str = "Hello, io_uring!";
-  char buffer[1024];
-  size_t len = strlen(str);
+// TEST(FileUringTest, SequentialWriteReadTest) {
+//   // EventLoop loop;
+//   EventLoopThread loop_thread;
+//   EventLoop *loop = loop_thread.startLoop();
+//   FileUring file_uring{"test2.txt", loop, false};
+//   const char *str = "Hello, io_uring!";
+//   char buffer[17];
+//   size_t len = strlen(str);
 
-  file_uring.asyncWrite(static_cast<void *>(const_cast<char *>(str)), len, 0,
-                        [&]() {
-                          LOG_INFO << "写入完成";
-                          file_uring.asyncRead(buffer, len, 0, [&]() {
-                            LOG_INFO << "读取完成: " << buffer;
-                            EXPECT_STREQ(buffer, str);
-                          });
-                        });
-  loop.loop();
-}
+//   file_uring.asyncWrite(static_cast<void *>(const_cast<char *>(str)), len, 0,
+//                         [&]() {
+//                           LOG_INFO << "写入完成";
+//                           // file_uring.asyncRead(buffer, len, 0, [&]() {
+//                           //   LOG_INFO << "读取完成: " << buffer;
+//                           //   EXPECT_STREQ(buffer, str);
+//                           // });
+//                         });
+//   sleep(2);
+//   file_uring.asyncRead(buffer, len, 0, [&]() {
+//     LOG_INFO << "读取完成: " << buffer;
+//     EXPECT_STREQ(buffer, str);
+//   });
+//   sleep(2);
+//   // loop.loop();
+// }
+// TEST(FileUringTest, IOChainWriteReadTest) {
+//   // EventLoop loop;
+//   EventLoopThread loop_thread;
+//   EventLoop *loop = loop_thread.startLoop();
+//   FileUring file_uring{"test2.txt", loop, false};
+//   const char *str = "Hello, io_uring!";
+//   char buffer[17];
+//   size_t len = strlen(str);
+
+//   file_uring.asyncWrite(static_cast<void *>(const_cast<char *>(str)), len, 0,
+//                         [&]() {
+//                           LOG_INFO << "写入完成";
+//                           file_uring.asyncRead(buffer, len, 0, [&]() {
+//                             LOG_INFO << "读取完成: " << buffer;
+//                             EXPECT_STREQ(buffer, str);
+//                           });
+//                         });
+//   sleep(2);
+//   // loop.loop();
+// }

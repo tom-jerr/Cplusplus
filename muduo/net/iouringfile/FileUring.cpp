@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <liburing.h>
 #include <liburing/io_uring.h>
+#include <memory>
 namespace muduo {
 namespace net {
 FileUring::FileUring(const std::string &file_path, EventLoop *loop,
@@ -34,19 +35,22 @@ FileUring::FileUring(const std::string &file_path, EventLoop *loop,
 
 FileUring::~FileUring() {
   if (file_channel_) {
-    file_channel_->disableAll();
-    file_channel_->remove();
+    // file_channel_->disableAll();
+    // file_channel_->remove();
     delete file_channel_;
     file_channel_ = nullptr;
   }
 }
 
-void FileUring::asyncRead(void *buffer, size_t data_size, size_t offset,
-                          std::function<void()> callback) {
+std::future<bool> FileUring::asyncRead(void *buffer, size_t data_size,
+                                       size_t offset,
+                                       std::function<void()> callback) {
   if (file_channel_) {
+    auto promise_ptr = std::make_shared<std::promise<bool>>();
+    auto future = promise_ptr->get_future();
     RequestContext *context =
         new RequestContext(file_channel_, buffer, data_size, offset,
-                           request_id_, RequestType::Read);
+                           request_id_, RequestType::Read, promise_ptr);
 
     request_map_.insert({request_id_, context});
     // LOG_INFO << "asyncRead context: " << context;
@@ -75,26 +79,33 @@ void FileUring::asyncRead(void *buffer, size_t data_size, size_t offset,
                                  return pair.first == cqe_context->getReqId();
                                });
 
+      cqe_context->setComplete();
       delete iter->second;
-      request_map_.erase(iter);
+      // request_map_.erase(iter);
     });
-    file_channel_->setType(RequestType::Read);
+    // file_channel_->setType(RequestType::Read);
     file_channel_->ownerLoop()->submitUringRequest(context);
     // wake up the event loop
     file_channel_->ownerLoop()->wakeup();
     request_id_++;
+    return future;
   } else {
     LOG_ERROR << "File channel is null";
+    return std::future<bool>();
   }
 }
 
-void FileUring::asyncWrite(void *str, size_t data_size, size_t offset,
-                           std::function<void()> callback) {
+std::future<bool> FileUring::asyncWrite(void *str, size_t data_size,
+                                        size_t offset,
+                                        std::function<void()> callback) {
   if (file_channel_) {
-    RequestContext *context = new RequestContext(
-        file_channel_, str, data_size, offset, request_id_, RequestType::Read);
+    auto promise_ptr = std::make_shared<std::promise<bool>>();
+    auto future = promise_ptr->get_future();
+    RequestContext *context =
+        new RequestContext(file_channel_, str, data_size, offset, request_id_,
+                           RequestType::Write, promise_ptr);
 
-    // reqs_.emplace_back(context);
+    request_map_.insert({request_id_, context});
     file_channel_->setUringWriteCallback([this,
                                           callback](struct io_uring_cqe *cqe) {
       LOG_INFO << "Write callback triggered";
@@ -119,16 +130,20 @@ void FileUring::asyncWrite(void *str, size_t data_size, size_t offset,
                                [cqe_context](const auto &pair) {
                                  return pair.first == cqe_context->getReqId();
                                });
+      cqe_context->setComplete();
       delete iter->second;
-      request_map_.erase(iter);
+      // request_map_.erase(iter);
     });
 
-    file_channel_->setType(RequestType::Write);
+    // file_channel_->setType(RequestType::Write);
     file_channel_->ownerLoop()->submitUringRequest(context);
     // wake up the event loop
     file_channel_->ownerLoop()->wakeup();
+    request_id_++;
+    return future;
   } else {
     LOG_ERROR << "File channel is null";
+    return std::future<bool>();
   }
 }
 } // namespace net

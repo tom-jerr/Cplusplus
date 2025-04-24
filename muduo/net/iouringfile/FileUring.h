@@ -17,7 +17,7 @@
 #include <fcntl.h>
 #include <unordered_map>
 // #include <map>
-
+#include <future>
 namespace muduo {
 namespace net {
 class FileUring {
@@ -27,11 +27,11 @@ public:
 
   ~FileUring();
 
-  void asyncRead(void *buffer, size_t data_size, size_t offset,
-                 std::function<void()> callback);
+  std::future<bool> asyncRead(void *buffer, size_t data_size, size_t offset,
+                              std::function<void()> callback);
 
-  void asyncWrite(void *str, size_t data_size, size_t offset,
-                  std::function<void()> callback);
+  std::future<bool> asyncWrite(void *str, size_t data_size, size_t offset,
+                               std::function<void()> callback);
 
 private:
   Channel *file_channel_;

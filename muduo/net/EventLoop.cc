@@ -165,7 +165,7 @@ void EventLoop::handleUringReqComplete() {
       LOG_ERROR << "I/O 错误: " << strerror(cqe->res)
                 << " (user_data=" << cqe->user_data << ")";
     } else {
-      LOG_INFO << "CQE user data: " << cqe->user_data;
+      // LOG_INFO << "CQE user data: " << cqe->user_data;
       RequestContext *context =
           reinterpret_cast<RequestContext *>(cqe->user_data);
       if (context == nullptr) {
@@ -188,11 +188,11 @@ void EventLoop::handleUringReqComplete() {
   }
   // update cqe
   io_uring_cq_advance(io_uring_.get(), count);
-  if (count > 0) {
-    LOG_INFO << "处理完成的请求数量: " << count;
-  } else {
-    LOG_INFO << "没有处理完成的请求";
-  }
+  // if (count > 0) {
+  //   LOG_INFO << "处理完成的请求数量: " << count;
+  // } else {
+  //   LOG_INFO << "没有处理完成的请求";
+  // }
 }
 
 void EventLoop::loop() {
